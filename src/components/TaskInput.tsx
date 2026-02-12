@@ -1,22 +1,24 @@
-import { useState } from "react";
-import { Plus, Calendar } from "lucide-react";
+import { useState, forwardRef } from "react";
+import { Plus, Calendar, Tag } from "lucide-react";
 
 interface TaskInputProps {
-  onAdd: (title: string, dueDate: string | null) => void;
+  onAdd: (title: string, dueDate: string | null, category: string) => void;
+  categories: string[];
 }
 
-export function TaskInput({ onAdd }: TaskInputProps) {
+export const TaskInput = forwardRef<HTMLInputElement, TaskInputProps>(({ onAdd, categories }, ref) => {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [showDate, setShowDate] = useState(false);
+  const [category, setCategory] = useState(categories[0] || "Personal");
+  const [showOptions, setShowOptions] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd(title, dueDate || null);
+    onAdd(title, dueDate || null, category);
     setTitle("");
     setDueDate("");
-    setShowDate(false);
+    setShowOptions(false);
   };
 
   return (
@@ -30,6 +32,7 @@ export function TaskInput({ onAdd }: TaskInputProps) {
           <Plus className="w-5 h-5" />
         </button>
         <input
+          ref={ref}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -39,22 +42,34 @@ export function TaskInput({ onAdd }: TaskInputProps) {
         />
         <button
           type="button"
-          onClick={() => setShowDate(!showDate)}
-          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${showDate ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-          aria-label="Set due date"
+          onClick={() => setShowOptions(!showOptions)}
+          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${showOptions ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+          aria-label="Task options"
         >
-          <Calendar className="w-4 h-4" />
+          <Tag className="w-4 h-4" />
         </button>
       </div>
-      {showDate && (
-        <input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          className="ml-12 bg-muted rounded-lg px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Due date"
-        />
+      {showOptions && (
+        <div className="flex items-center gap-2 ml-12 flex-wrap">
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="bg-muted rounded-lg px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Due date"
+          />
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="bg-muted rounded-lg px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            aria-label="Category"
+          >
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
       )}
     </form>
   );
-}
+});
+
+TaskInput.displayName = "TaskInput";
